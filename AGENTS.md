@@ -269,7 +269,30 @@ deliberately did not do, and any open question — then stop and wait.
 
 ---
 
-## 7. How to Ask Questions
+## 7. Code Style — Compact Formatting
+
+**No excessive spacing.** Write code compactly so it's easy to review:
+
+- **No blank lines between a docstring and the first field/method.**
+  The docstring is part of the block — a blank line after it separates it
+  from its own content.
+- **No multi-line field definitions unless they exceed ~88 chars.**
+  `confiance: float | None = Field(default=None, ge=0.0, le=1.0)` on one
+  line, not spread across 5.
+- **Imports: one per line only when wrapping is needed.** If 3 imports fit
+  on one line, put them on one line.
+- **`__all__`: one item per line, but don't add blank lines between groups.**
+  Comments between groups are fine; blank lines are noise.
+- **Literal types and small dicts:** put on one line if short enough.
+  `"d" | "de" | "r"` is fine on one line. 17-item dicts get one pair per
+  line but no extra blank lines.
+
+If ruff or black reformat your code into the expanded style, override
+their defaults — the project style is compact.
+
+---
+
+## 8. How to Ask Questions
 
 When you hit ambiguity, ask directly and specifically — don't bury a
 question inside a wall of implementation text. Format:

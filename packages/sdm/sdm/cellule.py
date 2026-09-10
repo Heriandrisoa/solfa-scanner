@@ -10,7 +10,6 @@ from sdm.note import Note
 
 class CelluleNote(BaseModel):
     """A single note within a beat."""
-
     genre: Literal["note"] = "note"
     note: Note
 
@@ -24,14 +23,12 @@ class CelluleTenue(BaseModel):
 
 class CelluleDemitemps(BaseModel):
     """Two notes in one beat (e.g. d.m)."""
-
     genre: Literal["demiTemps"] = "demiTemps"
     premiere: Cellule = Field(..., description="First note of the pair.")
     seconde: Cellule
 
 class CelluleTierstemps(BaseModel):
     """Three notes in one beat (e.g. d.,m)."""
-
     genre: Literal["tiersTemps"] = "tiersTemps"
     premiere: Cellule = Field(..., description="First note of the triplet.")
     seconde: Cellule
@@ -41,11 +38,5 @@ Cellule = Annotated[
     Field(discriminator="genre"),
 ]
 
-__all__ = [
-    "Cellule",
-    "CelluleNote",
-    "CelluleSilence",
-    "CelluleTenue",
-    "CelluleDemitemps",
-    "CelluleTierstemps",
-]
+__all__ = ["Cellule", "CelluleNote", "CelluleSilence", "CelluleTenue",
+           "CelluleDemitemps", "CelluleTierstemps"]

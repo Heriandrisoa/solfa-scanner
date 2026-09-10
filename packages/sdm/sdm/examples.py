@@ -1,17 +1,9 @@
 """Example SDM instances for testing and demonstration."""
-
 from __future__ import annotations
 
 from sdm.cellule import CelluleDemitemps, CelluleNote
 from sdm.note import Note
-from sdm.song import (
-    SDM,
-    Mesure,
-    Partie,
-    SignatureRythmique,
-    Ton,
-    Tonalite,
-)
+from sdm.song import SDM, Mesure, Partie, SignatureRythmique, Ton, Tonalite
 
 EXEMPLE_MDC: SDM = SDM(
     titre="Ny Fitiavan'Andriamanitra",
@@ -20,29 +12,18 @@ EXEMPLE_MDC: SDM = SDM(
     tempo_bpm=88,
     parties=[
         Partie(
-            id="partie-1",
-            voix="melodie",
+            id="partie-1", voix="melodie",
             mesures=[
                 Mesure(
                     id="mesure-1",
                     tons=[
-                        Ton(
-                            id="ton-1",
-                            cellule=CelluleDemitemps(
-                                premiere=CelluleNote(
-                                    note=Note(solfa="m", octave=0, parole="Ny")
-                                ),
-                                seconde=CelluleNote(
-                                    note=Note(solfa="d", octave=0)
-                                ),
-                            ),
-                        ),
-                        Ton(
-                            id="ton-2",
-                            cellule=CelluleNote(
-                                note=Note(solfa="f", octave=0, parole="fi")
-                            ),
-                        ),
+                        Ton(id="ton-1", cellule=CelluleDemitemps(
+                            premiere=CelluleNote(
+                                note=Note(solfa="m", octave=0, parole="Ny")),
+                            seconde=CelluleNote(
+                                note=Note(solfa="d", octave=0)))),
+                        Ton(id="ton-2", cellule=CelluleNote(
+                            note=Note(solfa="f", octave=0, parole="fi"))),
                     ],
                 )
             ],
