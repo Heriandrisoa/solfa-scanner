@@ -7,6 +7,7 @@ interface UsePlaybackReturn {
   isPlaying: boolean;
   play: () => void;
   stop: () => void;
+  restart: () => void;
 }
 
 function buildEvents(song: SDM) {
@@ -45,6 +46,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     partRef.current = null;
     synthRef.current?.dispose();
     synthRef.current = null;
+    Tone.Transport.position = 0;
     setIsPlaying(false);
   }, []);
 
@@ -55,12 +57,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     Tone.Transport.cancel();
   }, [cleanup]);
 
-  const play = useCallback(() => {
-    if (isPlaying) {
-      stop();
-      return;
-    }
-
+  const startPlayback = useCallback(() => {
     void Tone.start();
 
     const synth = new Tone.Synth({
@@ -83,8 +80,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
       }
     }, events);
 
-    // Auto-stop after last event — Transport is already winding down,
-    // so just clean up resources (no need to cancel Transport).
+    // Auto-stop after last event
     const lastBeat = events.length;
     const { denominateur } = song.signature_rythmique;
     const totalSeconds = lastBeat * Tone.Time(`${denominateur}n`).toSeconds();
@@ -96,7 +92,22 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     part.start(0);
     Tone.Transport.start("+0.05");
     setIsPlaying(true);
-  }, [song, isPlaying, stop, cleanup]);
+  }, [song, cleanup]);
 
-  return { isPlaying, play, stop };
+  const play = useCallback(() => {
+    if (isPlaying) {
+      stop();
+      return;
+    }
+    startPlayback();
+  }, [isPlaying, stop, startPlayback]);
+
+  const restart = useCallback(() => {
+    if (isPlaying) {
+      stop();
+    }
+    startPlayback();
+  }, [isPlaying, stop, startPlayback]);
+
+  return { isPlaying, play, stop, restart };
 }

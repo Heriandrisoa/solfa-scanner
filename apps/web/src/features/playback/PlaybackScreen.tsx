@@ -1,5 +1,5 @@
 import { usePlayback } from "./state/usePlayback";
-import { PlayButton } from "./components/PlayButton";
+import { PlayControls } from "./components/PlayButton";
 import type { SDM } from "./api/tones";
 
 /**
@@ -64,7 +64,7 @@ const NANA: SDM = {
 };
 
 export function PlaybackScreen() {
-  const { isPlaying, play, stop } = usePlayback(NANA);
+  const { isPlaying, play, stop, restart } = usePlayback(NANA);
   const toggle = isPlaying ? stop : play;
 
   return (
@@ -90,7 +90,7 @@ export function PlaybackScreen() {
         </p>
       </div>
 
-      <PlayButton isPlaying={isPlaying} onToggle={toggle} />
+      <PlayControls isPlaying={isPlaying} onToggle={toggle} onRestart={restart} />
 
       {isPlaying && (
         <p
