@@ -3,15 +3,22 @@ import * as Tone from "tone";
 import type { SDM } from "../api/tones";
 import { noteToTone } from "../api/tones";
 
+interface BeatEvent {
+  freq: string;
+  dur: string;
+  beatIndex: number;
+}
+
 interface UsePlaybackReturn {
   isPlaying: boolean;
+  activeBeat: number | null;
   play: () => void;
   stop: () => void;
   restart: () => void;
 }
 
 function buildEvents(song: SDM) {
-  const events: [number, { freq: string; dur: string } | null][] = [];
+  const events: [number, BeatEvent | null][] = [];
   const { denominateur } = song.signature_rythmique;
   const beatDuration = `${denominateur}n`;
 
@@ -24,9 +31,9 @@ function buildEvents(song: SDM) {
 
         if (ton.cellule.genre === "note") {
           const freq = noteToTone(ton.cellule.note, song.tonalite.tonique_midi);
-          events.push([time, { freq, dur: beatDuration }]);
+          events.push([time, { freq, dur: beatDuration, beatIndex }]);
         } else {
-          events.push([time, null]);
+          events.push([time, { freq: "", dur: "", beatIndex }]);
         }
         beatIndex++;
       }
@@ -38,6 +45,7 @@ function buildEvents(song: SDM) {
 
 export function usePlayback(song: SDM): UsePlaybackReturn {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [activeBeat, setActiveBeat] = useState<number | null>(null);
   const synthRef = useRef<Tone.Synth | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
 
@@ -47,6 +55,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     synthRef.current?.dispose();
     synthRef.current = null;
     Tone.Transport.position = 0;
+    setActiveBeat(null);
     setIsPlaying(false);
   }, []);
 
@@ -76,7 +85,10 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     const events = buildEvents(song);
     const part = new Tone.Part((time, value) => {
       if (value) {
-        synth.triggerAttackRelease(value.freq, value.dur, time);
+        setActiveBeat(value.beatIndex);
+        if (value.freq) {
+          synth.triggerAttackRelease(value.freq, value.dur, time);
+        }
       }
     }, events);
 
@@ -92,6 +104,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     part.start(0);
     Tone.Transport.start("+0.05");
     setIsPlaying(true);
+    setActiveBeat(0);
   }, [song, cleanup]);
 
   const play = useCallback(() => {
@@ -109,5 +122,5 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
     startPlayback();
   }, [isPlaying, stop, startPlayback]);
 
-  return { isPlaying, play, stop, restart };
+  return { isPlaying, activeBeat, play, stop, restart };
 }

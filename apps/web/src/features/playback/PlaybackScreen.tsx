@@ -1,5 +1,6 @@
 import { usePlayback } from "./state/usePlayback";
 import { PlayControls } from "./components/PlayButton";
+import { SolfaNotation } from "./components/SolfaNotation";
 import type { SDM } from "./api/tones";
 
 /**
@@ -64,7 +65,7 @@ const NANA: SDM = {
 };
 
 export function PlaybackScreen() {
-  const { isPlaying, play, stop, restart } = usePlayback(NANA);
+  const { isPlaying, activeBeat, play, stop, restart } = usePlayback(NANA);
   const toggle = isPlaying ? stop : play;
 
   return (
@@ -90,7 +91,11 @@ export function PlaybackScreen() {
         </p>
       </div>
 
-      <PlayControls isPlaying={isPlaying} onToggle={toggle} onRestart={restart} />
+      <SolfaNotation song={NANA} activeBeat={activeBeat} />
+
+      <div style={{ marginTop: "var(--space-6)" }}>
+        <PlayControls isPlaying={isPlaying} onToggle={toggle} onRestart={restart} />
+      </div>
 
       {isPlaying && (
         <p
