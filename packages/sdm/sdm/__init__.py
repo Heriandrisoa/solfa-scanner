@@ -14,6 +14,7 @@ from sdm.cellule import (
                           CelluleTierstemps,
 )
 from sdm.examples import EXEMPLE_MDC
+from sdm.fixtures import MARCHE, NANA
 from sdm.note import Note
 from sdm.notes import DEMI_TONS_PAR_SYLLABE, SyllabeSolfa
 from sdm.song import SDM, Mesure, Partie, SignatureRythmique, Ton, Tonalite, Voix
@@ -31,4 +32,6 @@ __all__ = [
     "Voix", "Partie", "SDM",
     # Example
     "EXEMPLE_MDC",
+    # Fixtures
+    "MARCHE", "NANA",
 ]

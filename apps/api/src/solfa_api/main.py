@@ -5,7 +5,7 @@ import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sdm import EXEMPLE_MDC, SDM
+from sdm import NANA, SDM
 
 app = FastAPI(title="Solfa Scanner API", version="0.1.0")
 ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
@@ -19,4 +19,4 @@ app.add_middleware(
 @app.get("/songs", response_model=SDM)
 async def get_song() -> SDM:
     """Return an example song as SDM JSON."""
-    return EXEMPLE_MDC
+    return NANA
