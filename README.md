@@ -4,48 +4,66 @@ Photograph tonic sol-fa notation, correct any misreads, and play it back as audi
 
 ## Prerequisites
 
-- Node.js >= 20
-- npm >= 10
+- Node.js >= 20 + npm >= 10
+- Python >= 3.11 (via conda `web-dev` env)
 
 ## Getting started
 
 ```bash
 git clone <repo-url>
 cd solfa-scanner
+```
+
+**Frontend (React):**
+
+```bash
 npm install
 npm run dev
 ```
 
-The app runs at `http://localhost:5173`.
+Runs at `http://localhost:5173`.
+
+**Backend (Python/FastAPI):**
+
+```bash
+conda activate web-dev
+pip install -e packages/sdm -e packages/parser -e apps/api
+npm run py:api
+```
+
+Runs at `http://localhost:8000`. API docs at `http://localhost:8000/docs`.
 
 ## Common commands
 
-| Command                | Description                      |
-| ---------------------- | -------------------------------- |
-| `npm run dev`          | Start the web dev server         |
-| `npm run build`        | Build the web app for production |
-| `npm run lint`         | Lint all code with ESLint        |
-| `npm run lint:fix`     | Auto-fix lint issues             |
-| `npm run format`       | Format code with Prettier        |
-| `npm run format:check` | Check code is formatted          |
-| `npm run typecheck`    | Type-check all packages          |
+| Command             | Description                              |
+| ------------------- | ---------------------------------------- |
+| `npm run dev`       | Start the frontend dev server            |
+| `npm run build`     | Build the frontend for production        |
+| `npm run py:api`    | Start the Python backend (hot reload)    |
+| `npm run lint`      | Lint frontend code with ESLint           |
+| `npm run format`    | Format code with Prettier                |
+| `npm run typecheck` | Type-check the frontend                  |
+| `mypy sdm/`         | Type-check SDM package (in packages/sdm) |
+| `ruff check sdm/`   | Lint SDM package (in packages/sdm)       |
 
 ## Project structure
 
 ```
 solfa-scanner/
   apps/
-    web/            # React + Vite frontend
-    api/            # Node backend (Express/Fastify)
+    web/            # React + Vite frontend (TypeScript)
+    api/            # Python backend (FastAPI) — src-layout
   packages/
-    sdm/            # Shared Song Data Model types + zod validation
-    parser/         # Rule-based sol-fa grammar parser
+    sdm/            # Song Data Model (Pydantic schemas)
+    parser/         # Rule-based sol-fa grammar parser (Python)
   docs/
-    project-context.md   # Project overview and requirements
+    project-context.md
 ```
 
-This is an npm workspaces monorepo. Workspaces are defined in the root `package.json`.
+- `packages/sdm` is shared between backend and frontend (as JSON).
+- `packages/parser` is imported only by `apps/api`.
 
 ## Code style
 
-ESLint (flat config, ESLint 9) + Prettier are configured at the repo root and enforced on all workspaces. Run `npm run lint && npm run format:check` before pushing.
+**Frontend:** ESLint (flat config) + Prettier, enforced at the repo root.
+**Backend:** mypy (strict) + ruff, configured per-package in `pyproject.toml`.

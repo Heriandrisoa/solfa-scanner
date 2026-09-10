@@ -1,0 +1,8 @@
+package-lock.json
+node_modules/
+dist/
+build/
+*.egg-info/
+__pycache__/
+brouillon_sdm.js
+.agents/

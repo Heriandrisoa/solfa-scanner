@@ -1,0 +1,1 @@
+"""Solfa Scanner — FastAPI backend."""

@@ -5,8 +5,7 @@
   "version": "0.1.0",
   "description": "Solfa Scanner — photograph tonic sol-fa notation, correct it, and play it back",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/web"
   ],
   "scripts": {
     "dev": "npm run dev --workspace @solfa/web",
@@ -15,7 +14,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspace @solfa/web",
+    "py:api": "uvicorn solfa_api.main:app --reload --app-dir apps/api"
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",

@@ -59,9 +59,9 @@ treat changes to it with extra care and extra test coverage.
 solfa-scanner/
   apps/
     web/          # React + Vite frontend
-    api/          # Node backend (Express/Fastify)
+    api/          # Python backend (FastAPI)
   packages/
-    sdm/          # Shared Song Data Model types + zod validation. ZERO framework deps.
+    sdm/          # Shared Song Data Model (Pydantic schemas). ZERO framework deps.
     parser/       # Rule-based sol-fa grammar parser. Imported only by apps/api.
 ```
 
@@ -69,18 +69,18 @@ solfa-scanner/
 
 ```
 apps/api/src/
+  main.py          # FastAPI app — HTTP only, wires core + adapters
   core/
-    pipeline/      # recognizePipeline.ts — pure orchestration, depends only on ports/
-    ports/         # interfaces: OcrProvider, ConfidenceScorer, etc.
+    pipeline/      # recognize_pipeline.py — pure orchestration, depends only on ports/
+    ports/         # Abstract base classes: OcrProvider, ConfidenceScorer, etc.
   adapters/
-    ocr/           # googleVisionProvider.ts implements OcrProvider — concrete only, no logic leaks upward
+    ocr/           # google_vision_provider.py implements OcrProvider — concrete only
     grammar/       # wraps packages/parser behind a port
-  routes/          # HTTP only — parses requests, calls core/pipeline, formats responses
 ```
 
 **Hard rule:** `core/` must never import from `adapters/` or any vendor SDK
-(Google Vision, Express, etc.) directly. `core/` only depends on `ports/`
-(interfaces). `adapters/` implement those interfaces. `routes/` wires a
+(Google Vision, FastAPI, etc.) directly. `core/` only depends on `ports/`
+(ABCs). `adapters/` implement those interfaces. `main.py` wires a
 concrete adapter into the pipeline — that wiring is the ONLY place adapter
 and core logic ever meet.
 
@@ -107,8 +107,8 @@ instead.
 
 ### `packages/sdm` — hard constraint
 
-Zero runtime dependencies on React, Express, Tone.js, or any vendor SDK.
-Types + `zod` validation only. If a change to this package would require
+Zero runtime dependencies on React, FastAPI, Tone.js, or any vendor SDK.
+Types + Pydantic validation only. If a change to this package would require
 importing anything framework-specific, stop and flag it — that's a sign the
 change belongs elsewhere.
 
