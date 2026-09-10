@@ -9,16 +9,10 @@ interface UsePlaybackReturn {
   stop: () => void;
 }
 
-/**
- * Convert SDM to Tone.Part events.
- *
- * Each "ton" (beat) becomes one event. Notes are played with
- * triggerAttackRelease, silences are skipped (no-op).
- */
 function buildEvents(song: SDM) {
   const events: [number, { freq: string; dur: string } | null][] = [];
   const { denominateur } = song.signature_rythmique;
-  const beatDuration = `${denominateur}n`; // e.g. "4n" = quarter note
+  const beatDuration = `${denominateur}n`;
 
   let beatIndex = 0;
 
@@ -31,7 +25,6 @@ function buildEvents(song: SDM) {
           const freq = noteToTone(ton.cellule.note, song.tonalite.tonique_midi);
           events.push([time, { freq, dur: beatDuration }]);
         } else {
-          // silence — push null so Part still advances
           events.push([time, null]);
         }
         beatIndex++;
@@ -47,16 +40,20 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
   const synthRef = useRef<Tone.Synth | null>(null);
   const partRef = useRef<Tone.Part | null>(null);
 
-  const stop = useCallback(() => {
-    partRef.current?.stop();
+  const cleanup = useCallback(() => {
     partRef.current?.dispose();
     partRef.current = null;
     synthRef.current?.dispose();
     synthRef.current = null;
-    Tone.Transport.stop();
-    Tone.Transport.cancel();
     setIsPlaying(false);
   }, []);
+
+  const stop = useCallback(() => {
+    partRef.current?.stop();
+    cleanup();
+    Tone.Transport.stop();
+    Tone.Transport.cancel();
+  }, [cleanup]);
 
   const play = useCallback(() => {
     if (isPlaying) {
@@ -64,7 +61,6 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
       return;
     }
 
-    // Browser autoplay gate — must call on user gesture
     void Tone.start();
 
     const synth = new Tone.Synth({
@@ -87,11 +83,20 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
       }
     }, events);
 
+    // Auto-stop after last event — Transport is already winding down,
+    // so just clean up resources (no need to cancel Transport).
+    const lastBeat = events.length;
+    const { denominateur } = song.signature_rythmique;
+    const totalSeconds = lastBeat * Tone.Time(`${denominateur}n`).toSeconds();
+    Tone.Transport.schedule(() => {
+      cleanup();
+    }, totalSeconds + 0.1);
+
     partRef.current = part;
     part.start(0);
-    Tone.Transport.start("+0.05"); // slight offset to avoid pops
+    Tone.Transport.start("+0.05");
     setIsPlaying(true);
-  }, [song, isPlaying, stop]);
+  }, [song, isPlaying, stop, cleanup]);
 
   return { isPlaying, play, stop };
 }
