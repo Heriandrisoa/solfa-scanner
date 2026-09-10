@@ -43,7 +43,7 @@ function buildEvents(song: SDM) {
   return events;
 }
 
-export function usePlayback(song: SDM): UsePlaybackReturn {
+export function usePlayback(song: SDM | null): UsePlaybackReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeBeat, setActiveBeat] = useState<number | null>(null);
   const synthRef = useRef<Tone.Synth | null>(null);
@@ -67,6 +67,7 @@ export function usePlayback(song: SDM): UsePlaybackReturn {
   }, [cleanup]);
 
   const startPlayback = useCallback(() => {
+    if (!song) return;
     void Tone.start();
 
     const synth = new Tone.Synth({
