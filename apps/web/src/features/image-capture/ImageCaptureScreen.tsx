@@ -3,6 +3,8 @@ import { useImageCapture } from "./state/useImageCapture";
 import { ImageDropZone } from "./components/ImageDropZone";
 import { ImageCompare } from "../image-preprocess/components/ImageCompare";
 import { useImagePreprocess } from "../image-preprocess/state/useImagePreprocess";
+import { OcrResultView } from "../ocr/components/OcrResultView";
+import { useOcr } from "../ocr/state/useOcr";
 import { Button } from "../../components/atoms/Button";
 import { Icon } from "../../components/atoms/Icon";
 
@@ -29,6 +31,14 @@ export function ImageCaptureScreen() {
     retake,
   } = useImagePreprocess();
 
+  const {
+    status: ocrStatus,
+    result: ocrResult,
+    error: ocrError,
+    run: runOcr,
+    reset: resetOcr,
+  } = useOcr();
+
   // Auto-process when a new file is set as pending
   useEffect(() => {
     if (pendingFile && status === "idle") {
@@ -40,12 +50,15 @@ export function ImageCaptureScreen() {
     if (processed) {
       accept();
       acceptPending(processed.processed);
+      resetOcr();
+      runOcr(processed.processed);
     }
   };
 
   const handleRetake = () => {
     retake();
     retakePending();
+    resetOcr();
   };
 
   const pageCount = images.length;
@@ -95,6 +108,10 @@ export function ImageCaptureScreen() {
           onOpenPicker={triggerFileInput}
           fileInputRef={inputRef}
         />
+      )}
+
+      {ocrStatus !== "idle" && (
+        <OcrResultView status={ocrStatus} result={ocrResult} error={ocrError} />
       )}
 
       {pageCount > 0 && !isProcessing && (
