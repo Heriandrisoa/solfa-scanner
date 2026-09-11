@@ -4,31 +4,27 @@
  * OpenCV.js is ~15MB — we only load it when the user actually uploads
  * an image, not on app start. Returns a ready-to-use `cv` object.
  */
-import type OpenCvType from "@techstark/opencv-js";
+import type { CV } from "@techstark/opencv-js";
 
-let cvPromise: Promise<typeof OpenCvType> | null = null;
+let cvPromise: Promise<CV> | null = null;
 
-export async function loadOpenCv(): Promise<typeof OpenCvType> {
+export async function loadOpenCv(): Promise<CV> {
   if (cvPromise) return cvPromise;
 
   cvPromise = (async () => {
     const cvModule = await import("@techstark/opencv-js");
+    const candidate = (cvModule as { default?: unknown }).default ?? cvModule;
 
-    const cv = cvModule.default ?? cvModule;
-
-    // If it's a promise, await it
-    if (cv instanceof Promise) {
-      return cv;
+    if (candidate instanceof Promise) {
+      return (await candidate) as CV;
     }
-
-    // If it has onRuntimeInitialized, wait for it
-    if (typeof cv === "object" && cv !== null && "onRuntimeInitialized" in cv) {
-      await new Promise<void>((resolve) => {
-        (cv as { onRuntimeInitialized: () => void }).onRuntimeInitialized = () => resolve();
-      });
+    if (candidate && (candidate as CV).Mat) {
+      return candidate as CV;
     }
-
-    return cv as typeof OpenCvType;
+    await new Promise<void>((resolve) => {
+      (candidate as { onRuntimeInitialized?: () => void }).onRuntimeInitialized = () => resolve();
+    });
+    return candidate as CV;
   })();
 
   return cvPromise;

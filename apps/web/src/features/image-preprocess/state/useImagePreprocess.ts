@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { loadOpenCv } from "../api/opencv";
-import { fileToMat, matToBlob, processImage } from "../api/preprocess";
+import { fileToCanvas, matToBlob, processImage } from "../api/preprocess";
 
 export type PreprocessStatus = "idle" | "loading-opencv" | "processing" | "done" | "error";
 
@@ -32,14 +32,14 @@ export function useImagePreprocess(): UseImagePreprocessReturn {
     setProcessed(null);
 
     try {
-      await loadOpenCv();
+      const cv = await loadOpenCv();
       setStatus("processing");
 
-      const canvas = await fileToMat(file);
+      const canvas = await fileToCanvas(file);
       const srcMat = cv.imread(canvas);
-      const processedMat = processImage(srcMat);
+      const processedMat = processImage(cv, srcMat);
 
-      const blob = await matToBlob(processedMat);
+      const blob = await matToBlob(cv, processedMat);
       const processedFile = new File([blob], file.name, { type: "image/png" });
 
       srcMat.delete();

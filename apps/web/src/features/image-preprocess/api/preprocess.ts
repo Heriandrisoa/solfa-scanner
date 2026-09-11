@@ -2,15 +2,17 @@
  * Image preprocessing with OpenCV.js.
  *
  * Pipeline: load → auto-crop → deskew → normalize → output blob.
- * All cv.Mat objects are deleted after use to avoid memory leaks.
- *
- * Uses the global `cv` object provided by OpenCV.js after loading.
+ * All Mat objects are deleted after use to avoid memory leaks.
+ * The `cv` object is passed explicitly (returned by loadOpenCv).
  */
+import type { CV } from "@techstark/opencv-js";
+
+type Mat = InstanceType<CV["Mat"]>;
 
 /**
- * Load an image File into a cv.Mat via a temporary canvas.
+ * Load an image File into a canvas element.
  */
-export function fileToMat(file: File): Promise<HTMLCanvasElement> {
+export function fileToCanvas(file: File): Promise<HTMLCanvasElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -28,9 +30,9 @@ export function fileToMat(file: File): Promise<HTMLCanvasElement> {
 }
 
 /**
- * Convert cv.Mat to a Blob (File-like).
+ * Convert Mat to a Blob.
  */
-export function matToBlob(mat: cv.Mat, mimeType = "image/png"): Promise<Blob> {
+export function matToBlob(cv: CV, mat: Mat, mimeType = "image/png"): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const canvas = document.createElement("canvas");
     cv.imshow(canvas, mat);
@@ -47,9 +49,8 @@ export function matToBlob(mat: cv.Mat, mimeType = "image/png"): Promise<Blob> {
 
 /**
  * Auto-crop: find the largest contour (page boundary) and crop to it.
- * Falls back to full image if no clear boundary found.
  */
-export function autoCrop(src: cv.Mat): cv.Mat {
+export function autoCrop(cv: CV, src: Mat): Mat {
   const gray = new cv.Mat();
   const blurred = new cv.Mat();
   const edged = new cv.Mat();
@@ -88,7 +89,7 @@ export function autoCrop(src: cv.Mat): cv.Mat {
     cv.approxPolyDP(largestContour, approx, 0.02 * peri, true);
 
     if (approx.rows === 4) {
-      const cropped = orderPointsAndWarp(src, approx);
+      const cropped = orderPointsAndWarp(cv, src, approx);
       approx.delete();
       return cropped;
     }
@@ -114,7 +115,7 @@ export function autoCrop(src: cv.Mat): cv.Mat {
 /**
  * Order 4 corner points (tl, tr, br, bl) and apply perspective warp.
  */
-function orderPointsAndWarp(src: cv.Mat, pts: cv.Mat): cv.Mat {
+function orderPointsAndWarp(cv: CV, src: Mat, pts: Mat): Mat {
   const points: Array<{ x: number; y: number }> = [];
   for (let i = 0; i < pts.rows; i++) {
     points.push({ x: pts.intAt(i, 0), y: pts.intAt(i, 1) });
@@ -157,7 +158,7 @@ function orderPointsAndWarp(src: cv.Mat, pts: cv.Mat): cv.Mat {
 /**
  * Deskew using minAreaRect.
  */
-export function deskew(src: cv.Mat): cv.Mat {
+export function deskew(cv: CV, src: Mat): Mat {
   const gray = new cv.Mat();
   const edged = new cv.Mat();
   const contours = new cv.MatVector();
@@ -210,7 +211,7 @@ export function deskew(src: cv.Mat): cv.Mat {
 /**
  * Normalize contrast and brightness using CLAHE.
  */
-export function normalize(src: cv.Mat): cv.Mat {
+export function normalize(cv: CV, src: Mat): Mat {
   const lab = new cv.Mat();
   const lChannel = new cv.Mat();
   const clahe = new cv.CLAHE(2.0, new cv.Size(8, 8));
@@ -243,14 +244,13 @@ export function normalize(src: cv.Mat): cv.Mat {
 
 /**
  * Full preprocessing pipeline: crop → deskew → normalize.
- * Returns the processed cv.Mat. Caller must delete it.
  */
-export function processImage(src: cv.Mat): cv.Mat {
-  let result = autoCrop(src);
-  const deskewed = deskew(result);
+export function processImage(cv: CV, src: Mat): Mat {
+  let result = autoCrop(cv, src);
+  const deskewed = deskew(cv, result);
   if (result !== src) result.delete();
   result = deskewed;
-  const normalized = normalize(result);
+  const normalized = normalize(cv, result);
   result.delete();
   return normalized;
 }
