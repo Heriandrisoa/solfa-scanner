@@ -2,49 +2,51 @@
  * Lazy OpenCV.js loader.
  *
  * OpenCV.js is ~15MB — we only load it when the user actually uploads
- * an image, not on app start. Returns a ready-to-use `cv` object.
+ * an image, not on app start. Uses Vite's ?url import to get a direct
+ * URL to the UMD bundle, then loads it via <script> tag.
  */
 import type { CV } from "@techstark/opencv-js";
+import opencvJsUrl from "@techstark/opencv-js/dist/opencv.js?url";
 
 let cvPromise: Promise<CV> | null = null;
+
+function loadScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[data-opencv]`)) {
+      resolve();
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = src;
+    s.dataset.opencv = "true";
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed to load OpenCV.js from ${src}`));
+    document.head.appendChild(s);
+  });
+}
 
 export async function loadOpenCv(): Promise<CV> {
   if (cvPromise) return cvPromise;
 
   cvPromise = (async () => {
-    const mod = await import("@techstark/opencv-js");
+    await loadScript(opencvJsUrl);
 
-    // The default export is either a Promise or the cv object itself
-    const candidate = mod.default ?? mod;
+    const g = globalThis as Record<string, unknown>;
+    const cvFactory = g.cv;
 
-    // Case 1: it's a Promise (async Emscripten factory)
-    if (candidate instanceof Promise) {
-      return (await candidate) as CV;
+    if (typeof cvFactory === "function") {
+      // cv is the async Emscripten factory — call it to init WASM
+      const result = await (cvFactory as () => Promise<unknown>)();
+      return result as CV;
     }
 
-    // Case 2: it already has Mat — it's the initialized cv object
-    if (candidate && typeof candidate === "object" && "Mat" in candidate) {
-      return candidate as CV;
+    if (cvFactory && typeof cvFactory === "object" && "Mat" in (cvFactory as object)) {
+      return cvFactory as CV;
     }
 
-    // Case 3: fallback — the module object might need the WASM to load.
-    // We can't assign onRuntimeInitialized to a frozen object,
-    // so we poll until Mat appears or a timeout is reached.
-    return new Promise<CV>((resolve, reject) => {
-      const start = Date.now();
-      const timeout = 30_000;
-
-      const check = () => {
-        if (candidate && typeof candidate === "object" && "Mat" in candidate) {
-          resolve(candidate as CV);
-        } else if (Date.now() - start > timeout) {
-          reject(new Error("OpenCV.js failed to initialize within 30s"));
-        } else {
-          setTimeout(check, 100);
-        }
-      };
-      check();
-    });
+    throw new Error(
+      "OpenCV.js loaded but cv global is not available or not initialized",
+    );
   })();
 
   return cvPromise;
