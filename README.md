@@ -1,7 +1,19 @@
 # Solfa Scanner
 
-Photograph tonic sol-fa notation, correct any misreads, and play it back as audio.
+**Point your phone at a page of sol-fa. Hear it sing.**
 
+Many choirs learn their music from tonic sol-fa sheets: do, re, mi on paper,
+no staff, no piano needed. Solfa Scanner turns a photo of one of those sheets
+into audio, so you can practise your part at home before rehearsal.
+
+## How it works
+
+1. **Snap** a photo of the sheet.
+2. **Fix** whatever the scanner misread. Printed notation is messy, so you stay in control.
+3. **Play** it back. A rule-based grammar parser turns your corrected notation
+   into a structured song, and the app plays it.
+
+> 🚧 Work in progress.
 ## Prerequisites
 
 - Node.js >= 20 + npm >= 10
